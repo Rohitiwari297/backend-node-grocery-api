@@ -1,7 +1,7 @@
 import { Schema } from 'mongoose';
 import mongoose from 'mongoose';
 
-const bennerSchema = new Schema(
+const bannerSchema = new Schema(
   {
     image: {
       type: String,
@@ -11,8 +11,13 @@ const bennerSchema = new Schema(
       unique: true,
       required: true,
     },
+    position: {
+      type: String,
+      enum: ["top", "middle", "bottom"],
+      default: "top",
+    },
   },
   { timestamps: true },
 );
 
-export const Banner = mongoose.model('Banner', bennerSchema);
+export const Banner = mongoose.model('Banner', bannerSchema);

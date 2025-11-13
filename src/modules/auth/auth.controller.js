@@ -2,30 +2,25 @@ import { ApiError } from '../../shared/utils/ApiError.js';
 import { ApiResponse } from '../../shared/utils/ApiResponse.js';
 import { asyncHandler } from '../../shared/utils/asyncHandler.js';
 import { User } from '../../models/user.model.js';
+import { Otp } from '../../models/auth.model.js';
 
 // Helper to generate OTP
 const genOtp = () => Math.floor(1000 + Math.random() * 9000).toString();
 
 export const sendOtp = asyncHandler(async (req, res) => {
   const { mobile } = req.body;
-  if (!mobile) return res.status(400).json({ message: 'Mobile required' });
+  if (!mobile) throw new ApiError(400, 'Mobile required');
 
   const otp = genOtp();
-  const otpExpires = new Date(
-    Date.now() + parseInt(process.env.OTP_TTL_MINUTES || '5') * 60 * 1000,
-  );
+  const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 min default
 
-  let user = await User.findOne({ mobile });
-  if (!user) {
-    user = new User({ mobile });
-  }
+  // Delete old OTP if exists for same mobile
+  await Otp.deleteMany({ mobile });
 
-  // Save OTP in DB (select:false prevents casual queries showing it)
-  user.otp = otp;
-  user.otpExpires = otpExpires;
-  await user.save();
+  // Save new OTP
+  await Otp.create({ mobile, otp, otpExpires });
 
-  // DEV: log OTP to console
+  // DEV: show OTP in console (for testing)
   console.log(`OTP for ${mobile}: ${otp}`);
 
   return res.json(new ApiResponse(200, { mobile, otp, otpExpires }, 'OTP sent successfully'));
@@ -33,32 +28,25 @@ export const sendOtp = asyncHandler(async (req, res) => {
 
 export const verifyOtp = asyncHandler(async (req, res) => {
   const { mobile, otp } = req.body;
-  if (!mobile || !otp) {
-    throw new ApiError(400, 'mobile and otp required');
-  }
+  if (!mobile || !otp) throw new ApiError(400, 'mobile and otp required');
 
-  const user = await User.findOne({ mobile }).select('+otp +otpExpires');
+  const otpRecord = await Otp.findOne({ mobile });
+  if (!otpRecord) throw new ApiError(400, 'OTP not found');
+  if (otpRecord.otp !== otp) throw new ApiError(400, 'Invalid OTP');
+  if (otpRecord.otpExpires < new Date()) throw new ApiError(400, 'OTP expired');
+
+  // Delete OTP after verification (security)
+  await Otp.deleteMany({ mobile });
+
+  // Check if user exists, else create
+  let user = await User.findOne({ mobile });
   if (!user) {
-    throw new ApiError(400, 'User not found');
+    user = await User.create({ mobile });
   }
 
-  if (!user.otp || user.otp !== otp) {
-    throw new ApiError(400, 'Invalid OTP');
-  }
-
-  if (!user.otpExpires || user.otpExpires < new Date()) {
-    throw new ApiError(400, 'OTP expired');
-  }
-
-  // Clear OTP fields (so it cannot be reused)
-  user.otp = undefined;
-  user.otpExpires = undefined;
-  await user.save();
-
-  // Generate stateless JWT (not stored in DB)
+  // Generate JWT (stateless)
   const token = user.generateAuthToken();
 
-  // Hide sensitive fields before sending
   const userSafe = {
     _id: user._id,
     mobile: user.mobile,
@@ -67,5 +55,5 @@ export const verifyOtp = asyncHandler(async (req, res) => {
     avatar: user.avatar,
   };
 
-  return res.json(new ApiResponse(200, { message: 'Login successful', user: userSafe, token }));
+  return res.json(new ApiResponse(200, { user: userSafe, token }, 'Login successful'));
 });

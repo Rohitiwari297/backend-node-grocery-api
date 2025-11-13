@@ -14,12 +14,19 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get('/', (req, res) => {
+  res.send(`Server is running at ${new Date().toLocaleString()}`);
+});
+
 app.get('/test-server', (req, res) => {
   res.send('Server Running...');
 });
+
 app.get('/test-error', (req, res) => {
   throw new ApiError(404, 'Not Found');
 });
+
+app.use('/uploads', express.static('uploads'));
 
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);

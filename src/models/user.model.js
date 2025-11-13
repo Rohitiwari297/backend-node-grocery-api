@@ -15,8 +15,10 @@ const userSchema = new Schema(
     avatar: {
       type: String,
     },
-    otp: { type: String, select: false },
-    otpExpires: { type: Date, select: false },
+    location: {
+      type: String,
+      default: '',
+    },
   },
   { timestamps: true },
 );
