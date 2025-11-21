@@ -1,20 +1,37 @@
 import { Schema } from "mongoose";
+import mongoose from "mongoose";
 
 export const productSchema = new Schema({
+    category: {
+        type: Schema.Types.ObjectId,
+        ref: 'Category',
+        required: true,
+    },
+    subCategory: {
+        type: Schema.Types.ObjectId,
+        ref: 'SubCategory'
+    },
     name: {
         type: String,
-        unique: true,
         required: true,
     },
     description: {
         type: String,
     },
-    price: {
+    currentPrice: {
         type: Number,
         required: true,
     },
-    image: {
-        type: String,
+    originalPrice: {
+        type: Number,
+        required: true,
+    },
+    unit: {
+        type: String
+    },
+    images: {
+        type: [String],
+        required: true
     },
 }, { timestamps: true });
 

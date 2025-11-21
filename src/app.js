@@ -7,6 +7,11 @@ import userRoutes from './modules/users/user.routes.js';
 import bannerRoutes from './modules/banner/banner.routes.js';
 import categoryRoutes from './modules/category/category.routes.js';
 import authRoutes from './modules/auth/auth.routes.js';
+import productRoutes from './modules/products/product.routes.js';
+import couponRoutes from './modules/coupons/coupon.routes.js';
+import notificationRoutes from './modules/notifications/notification.routes.js';
+import cartRoutes from './modules/cart/cart.routes.js';
+import orderRoutes from './modules/orders/order.routes.js';
 
 const app = express();
 
@@ -32,6 +37,11 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
 
 app.use(requestLogger);
 app.use(errorHandler);

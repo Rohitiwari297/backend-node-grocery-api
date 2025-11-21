@@ -1,7 +1,7 @@
 import { ApiError } from '../../shared/utils/ApiError.js';
 import { ApiResponse } from '../../shared/utils/ApiResponse.js';
 import { asyncHandler } from '../../shared/utils/asyncHandler.js';
-import { User } from '../../models/user.model.js';
+import { Address, User } from '../../models/user.model.js';
 
 // User registration
 export const addUser = asyncHandler(async (req, res) => {
@@ -29,7 +29,7 @@ export const addUser = asyncHandler(async (req, res) => {
           (req.file.filename ? join(process.cwd(), 'uploads', req.file.filename) : null);
 
         if (uploadedPath) {
-          await fsPromises.unlink(uploadedPath).catch(() => {});
+          await fsPromises.unlink(uploadedPath).catch(() => { });
         }
       } catch (err) {
         // ignore errors when trying to remove the file
@@ -65,7 +65,7 @@ export const addUser = asyncHandler(async (req, res) => {
   return res.json(new ApiResponse(200, { user: newUser }, 'User registered successfully'));
 });
 
-// Get User
+// Get Users
 export const getUsers = asyncHandler(async (req, res) => {
   const users = await User.find();
   return res.send(new ApiResponse(200, users, 'Users fetched successfully.'));
@@ -111,7 +111,7 @@ export const updateUser = asyncHandler(async (req, res) => {
         // Resolve the stored avatar path (may already include 'uploads/...') to an absolute path
         const oldPath = resolve(process.cwd(), existingUser.avatar);
         // Try to unlink and ignore errors (e.g., file not found)
-        await fsPromises.unlink(oldPath).catch(() => {});
+        await fsPromises.unlink(oldPath).catch(() => { });
       } catch (err) {
         // ignore
       }
@@ -122,4 +122,21 @@ export const updateUser = asyncHandler(async (req, res) => {
   const updatedUser = await User.findByIdAndUpdate(userId, updateFields, { new: true });
 
   return res.send(new ApiResponse(200, updatedUser, 'User updated successfully.'));
+});
+
+
+
+export const getUserAddress = asyncHandler(async (req, res) => {
+  const address = await Address.find();
+  return res.send(new ApiResponse(200, address, 'Address fetched successfully.'));
+});
+
+export const addUserAddress = asyncHandler(async (req, res) => {
+  const address = await Address.create(req.body);
+  return res.send(new ApiResponse(200, address, 'Address added successfully.'));
+});
+export const deleteUserAddress = asyncHandler(async (req, res) => {
+  const { addressId } = req.params;
+  const address = await Address.findByIdAndDelete(addressId);
+  return res.send(new ApiResponse(200, address, 'Address deleted successfully.'));
 });
