@@ -25,9 +25,7 @@ const errorHandler = (err, req, res, next) => {
 
     // set a message from native Error instance or a custom one
     const message = error.message || 'Something went wrong';
-    logger.error(
-      `❌ [${req.method}] ${req.originalUrl} - ${statusCode} - ${err.message}\n${err.stack}`,
-    );
+    logger.error(`❌ [${req.method}] ${req.originalUrl} - ${statusCode} - ${err.message}\n${err.stack}`);
     error = new ApiError(statusCode, message, error?.errors || [], err.stack);
   }
 

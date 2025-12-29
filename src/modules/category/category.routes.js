@@ -4,10 +4,8 @@ import { getCategories, addCategory, getSubCategories, addSubCategory } from './
 
 const router = Router();
 
-router.route('/').get(getCategories)
-    .post(upload.single('image'), addCategory);
+router.route('/').get(getCategories).post(upload.single('image'), addCategory);
 
-router.route('/sub').get(getSubCategories)
-    .post(upload.single('image'), addSubCategory);
+router.route('/sub').get(getSubCategories).post(upload.single('image'), addSubCategory);
 
 export default router;

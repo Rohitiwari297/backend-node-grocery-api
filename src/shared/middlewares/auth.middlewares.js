@@ -6,7 +6,6 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 
 export const auth = asyncHandler(async (req, res, next) => {
-
   const authHeader = req.headers.authorization;
 
   // 1️⃣ Missing Authorization header
@@ -68,5 +67,4 @@ export const auth = asyncHandler(async (req, res, next) => {
   // 9️⃣ Attach user and continue
   req.user = user;
   next();
-
 });

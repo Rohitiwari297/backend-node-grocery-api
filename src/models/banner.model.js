@@ -13,8 +13,8 @@ const bannerSchema = new Schema(
     },
     position: {
       type: String,
-      enum: ["top", "middle", "bottom"],
-      default: "top",
+      enum: ['top', 'middle', 'bottom'],
+      default: 'top',
     },
   },
   { timestamps: true },

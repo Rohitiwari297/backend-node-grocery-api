@@ -1,13 +1,6 @@
 import { Router } from 'express';
 import { auth } from '../../shared/middlewares/auth.middlewares.js';
-import {
-    getCart,
-    addToCart,
-    updateCartItem,
-    removeFromCart,
-    clearCart,
-    getCartCount,
-} from './cart.controller.js';
+import { getCart, addToCart, updateCartItem, removeFromCart, clearCart, getCartCount } from './cart.controller.js';
 
 const router = Router();
 

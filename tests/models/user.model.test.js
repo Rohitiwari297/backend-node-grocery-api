@@ -140,11 +140,7 @@ describe('User Model', () => {
       const savedUser = await User.create(userData);
 
       const updateData = { name: 'Updated Name', email: 'updated@example.com' };
-      const updatedUser = await User.findByIdAndUpdate(
-        savedUser._id,
-        updateData,
-        { new: true }
-      );
+      const updatedUser = await User.findByIdAndUpdate(savedUser._id, updateData, { new: true });
 
       expect(updatedUser.name).toBe('Updated Name');
       expect(updatedUser.email).toBe('updated@example.com');
@@ -163,9 +159,7 @@ describe('User Model', () => {
       const foundUsers = await User.find();
 
       expect(foundUsers).toHaveLength(3);
-      expect(foundUsers.map(u => u.mobile)).toEqual(
-        expect.arrayContaining(['1111111111', '2222222222', '3333333333'])
-      );
+      expect(foundUsers.map((u) => u.mobile)).toEqual(expect.arrayContaining(['1111111111', '2222222222', '3333333333']));
     });
   });
 
@@ -189,7 +183,7 @@ describe('User Model', () => {
       const originalUpdatedAt = savedUser.updatedAt;
 
       // Wait a bit to ensure timestamp difference
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       savedUser.name = 'Updated Name';
       await savedUser.save();

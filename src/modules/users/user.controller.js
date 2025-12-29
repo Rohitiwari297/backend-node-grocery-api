@@ -24,9 +24,7 @@ export const addUser = asyncHandler(async (req, res) => {
         const { join } = await import('path');
 
         // Multer may provide either `path` (full path) or `filename`
-        const uploadedPath =
-          req.file.path ??
-          (req.file.filename ? join(process.cwd(), 'uploads', req.file.filename) : null);
+        const uploadedPath = req.file.path ?? (req.file.filename ? join(process.cwd(), 'uploads', req.file.filename) : null);
 
         if (uploadedPath) {
           await fsPromises.unlink(uploadedPath).catch(() => { });
@@ -123,8 +121,6 @@ export const updateUser = asyncHandler(async (req, res) => {
 
   return res.send(new ApiResponse(200, updatedUser, 'User updated successfully.'));
 });
-
-
 
 export const getUserAddress = asyncHandler(async (req, res) => {
   const address = await Address.find();

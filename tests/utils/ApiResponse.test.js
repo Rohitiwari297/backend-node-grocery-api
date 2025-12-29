@@ -23,7 +23,7 @@ describe('ApiResponse', () => {
     test('should handle success status codes correctly', () => {
       const successCodes = [200, 201, 204, 300, 301, 302];
 
-      successCodes.forEach(statusCode => {
+      successCodes.forEach((statusCode) => {
         const response = new ApiResponse(statusCode, {}, 'Success');
         expect(response.success).toBe(true);
         expect(response.statusCode).toBe(statusCode);
@@ -33,7 +33,7 @@ describe('ApiResponse', () => {
     test('should handle error status codes correctly', () => {
       const errorCodes = [400, 401, 403, 404, 500, 502];
 
-      errorCodes.forEach(statusCode => {
+      errorCodes.forEach((statusCode) => {
         const response = new ApiResponse(statusCode, {}, 'Error');
         expect(response.success).toBe(false);
         expect(response.statusCode).toBe(statusCode);

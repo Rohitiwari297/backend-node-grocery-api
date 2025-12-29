@@ -10,8 +10,8 @@ const otpSchema = new Schema(
         validator: function (v) {
           return /^\d{4}$/.test(v);
         },
-        message: props => `${props.value} is not a valid 4-digit OTP!`
-      }
+        message: (props) => `${props.value} is not a valid 4-digit OTP!`,
+      },
     },
     otpExpires: { type: Date, required: true },
   },

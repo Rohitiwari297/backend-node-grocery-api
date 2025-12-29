@@ -1,11 +1,9 @@
 import jwt from 'jsonwebtoken';
 
 export const generateTestToken = (userId, mobile = '1234567890') => {
-  return jwt.sign(
-    { _id: userId, mobile },
-    process.env.JWT_SECRET || 'test_secret',
-    { expiresIn: '1h' }
-  );
+  return jwt.sign({ _id: userId, mobile }, process.env.JWT_SECRET || 'test_secret', {
+    expiresIn: '1h',
+  });
 };
 
 export const generateTestOTP = () => {
@@ -22,7 +20,6 @@ export const createTestUser = (overrides = {}) => {
     ...overrides,
   };
 };
-
 
 export const createTestOTP = (mobile = '1234567890', otp = null) => {
   return {

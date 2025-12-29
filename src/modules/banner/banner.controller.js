@@ -9,7 +9,7 @@ export const getBanners = asyncHandler(async (req, res) => {
   return res.send(new ApiResponse(200, banners, 'Banners fetched successfully.'));
 });
 
-// Add Banner 
+// Add Banner
 export const addBanner = asyncHandler(async (req, res) => {
   const { redirectUrl, position } = req.body;
 

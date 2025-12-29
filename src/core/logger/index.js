@@ -35,18 +35,13 @@ const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    winston.format.printf(
-      ({ timestamp, level, message, stack }) =>
-        `[${timestamp}] ${level.toUpperCase()}: ${stack || message}`,
-    ),
+    winston.format.printf(({ timestamp, level, message, stack }) => `[${timestamp}] ${level.toUpperCase()}: ${stack || message}`),
   ),
   transports,
 });
 
 // Handle uncaught exceptions (file)
-logger.exceptions.handle(
-  new winston.transports.File({ filename: path.join(logDir, 'exceptions.log') }),
-);
+logger.exceptions.handle(new winston.transports.File({ filename: path.join(logDir, 'exceptions.log') }));
 
 // Start background maintenance (compress yesterday, cleanup) - optional: you can call this from index.js instead
 startLogMaintenance();

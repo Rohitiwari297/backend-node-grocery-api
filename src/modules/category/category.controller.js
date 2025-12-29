@@ -11,17 +11,15 @@ export const getCategories = asyncHandler(async (req, res) => {
 
 // Add Category
 export const addCategory = asyncHandler(async (req, res) => {
-
   const { name, position } = req.body;
   const image = req.file?.path ?? '';
   const category = await Category.create({ name, position, image });
 
   return res.send(new ApiResponse(201, category, 'Category added successfully.'));
-})
+});
 
 // Get Sub Categories
 export const getSubCategories = asyncHandler(async (req, res) => {
-
   const { category } = req.query;
 
   let filter = {};
@@ -37,10 +35,9 @@ export const getSubCategories = asyncHandler(async (req, res) => {
 
 // Add Sub Category
 export const addSubCategory = asyncHandler(async (req, res) => {
-
   const { category, name } = req.body;
   const image = req.file?.path ?? '';
   const newSubCategory = await SubCategory.create({ category, name, image });
 
   return res.send(new ApiResponse(201, newSubCategory, 'Sub Category added successfully.'));
-})
+});

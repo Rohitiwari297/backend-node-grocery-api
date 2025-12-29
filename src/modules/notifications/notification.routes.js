@@ -1,16 +1,21 @@
 import express from 'express';
 import { auth } from '../../shared/middlewares/auth.middlewares.js';
 import {
-    addNotification,
-    getUserNotifications,
-    getUnreadCount,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-    clearAllNotifications,
+  addNotification,
+  getUserNotifications,
+  getUnreadCount,
+  markAsRead,
+  markAllAsRead,
+  deleteNotification,
+  clearAllNotifications,
+  sendNotification,
 } from './notification.controller.js';
 
 const router = express.Router();
+
+
+// public routes
+router.post('/send', sendNotification);
 
 // All routes require authentication
 router.use(auth);
