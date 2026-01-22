@@ -34,6 +34,9 @@ export const productSchema = new Schema(
       type: [String],
       required: true,
     },
+    tags: {
+      type: [String],//Grocery Exclusive, Grocery at great Value, Best Seller, New Arrival, Deal of the day
+    },
   },
   { timestamps: true },
 );

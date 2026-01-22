@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 
 // Get Products
 export const getProducts = asyncHandler(async (req, res) => {
-  const { category, subCategory, page = 1, limit = 10, search, sort = 'newest', } = req.query;
+  const { category, subCategory, page = 1, limit = 10, search, sort = 'newest', tags } = req.query;
 
   const matchStage = {};
 
@@ -44,8 +44,24 @@ export const getProducts = asyncHandler(async (req, res) => {
 
   const skip = (page - 1) * limit;
 
-  // console.log(sortStage);
+  if (search) {
+    matchStage.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { description: { $regex: search, $options: 'i' } },
+    ];
+  }
 
+  if (tags) {
+    let tagsArray = [];
+    if (Array.isArray(tags)) {
+      tagsArray = tags;
+    } else if (typeof tags === 'string') {
+      tagsArray = tags.split(',').map(tag => tag.trim());
+    }
+    matchStage.tags = { $in: tagsArray };
+  }
+
+  console.log(sortStage);
 
 
   const products = await Product.aggregate([
@@ -142,13 +158,13 @@ export const getRelatedProducts = asyncHandler(async (req, res) => {
 });
 
 export const getProductById = asyncHandler(async (req, res) => {
-  const { productid } = req.params;
+  const { productId } = req.params;
 
   const matchStage = {};
 
   // Add filters if provided
-  if (productid) {
-    matchStage._id = new mongoose.Types.ObjectId(productid);
+  if (productId) {
+    matchStage._id = new mongoose.Types.ObjectId(productId);
   }
 
   const product = await Product.aggregate([
@@ -212,4 +228,49 @@ export const addProduct = asyncHandler(async (req, res) => {
   });
 
   return res.send(new ApiResponse(201, product, 'Product added successfully.'));
+});
+
+// Update Product
+export const updateProduct = asyncHandler(async (req, res) => {
+  const { productId } = req.params; // Product ID from URL
+  const { name, category, subCategory, description, currentPrice, originalPrice, unit, tags } = req.body;
+
+  // Find the existing product
+  const product = await Product.findById(productId);
+  if (!product) {
+    throw new ApiError(404, 'Product not found');
+  }
+
+  // Extract new image paths from multer
+  const newImages = req.files ? req.files.map((file) => file.path) : [];
+
+  // If there are new images, optionally delete old images from filesystem
+  if (newImages.length && product.images && product.images.length) {
+    try {
+      const fs = await import('fs/promises');
+      await Promise.all(product.images.map((img) => fs.unlink(img).catch(() => { })));
+    } catch (err) {
+      console.error('Failed to remove old images:', err);
+    }
+  }
+
+  // Update fields if provided
+  product.name = name || product.name;
+  product.category = category || product.category;
+  product.subCategory = subCategory || product.subCategory;
+  product.description = description || product.description;
+  product.currentPrice = currentPrice || product.currentPrice;
+  product.originalPrice = originalPrice || product.originalPrice;
+  product.unit = unit || product.unit;
+  product.images = newImages.length ? newImages : product.images; // Use new images if uploaded
+  if (tags) {
+    if (Array.isArray(tags)) {
+      product.tags = tags;
+    } else if (typeof tags === 'string') {
+      product.tags = tags.split(',').map(tag => tag.trim());
+    }
+  }
+  await product.save();
+
+  return res.send(new ApiResponse(200, product, 'Product updated successfully.'));
 });
