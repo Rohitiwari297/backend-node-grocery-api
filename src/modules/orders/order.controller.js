@@ -67,15 +67,17 @@ export const placeOrder = asyncHandler(async (req, res) => {
 // Get all orders for user
 export const getUserOrders = asyncHandler(async (req, res) => {
   const userId = req.user._id;
+  const { orderId, status } = req.query;
   // const orders = await Order.find({ userId }).sort({ createdAt: -1 });
 
   const orders = await Order.aggregate([
     {
       $match: {
         userId: new mongoose.Types.ObjectId(userId),
+        ...(orderId && { orderId: orderId }),
+        ...(status && { status: status }),
       },
     },
-
     {
       $unwind: '$items',
     },
@@ -102,6 +104,32 @@ export const getUserOrders = asyncHandler(async (req, res) => {
     {
       $unwind: '$product',
     },
+    {
+      $group: {
+        _id: "$_id",
+        orderId: { $first: "$orderId" },
+        userId: { $first: "$userId" },
+        totalItems: { $first: "$totalItems" },
+        totalPrice: { $first: "$totalPrice" },
+        status: { $first: "$status" },
+        paymentMethod: { $first: "$paymentMethod" },
+        shippingAddress: { $first: "$shippingAddress" },
+        createdAt: { $first: "$createdAt" },
+        updatedAt: { $first: "$updatedAt" },
+
+        items: {
+          $push: {
+            _id: "$items._id",
+            productId: "$items.productId",
+            quantity: "$items.quantity",
+            price: "$items.price",
+            product: "$product",
+          },
+        },
+      },
+    },
+    { $sort: { createdAt: -1 } },
+
   ]);
 
   return res.json(new ApiResponse(200, orders, 'Orders fetched successfully'));
