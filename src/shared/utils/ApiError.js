@@ -9,6 +9,7 @@ class ApiError extends Error {
    * @param {string} message
    * @param {any[]} errors
    * @param {string} stack
+   * 
    */
   constructor(statusCode, message = 'Something went wrong', errors = [], stack = '') {
     super(message);

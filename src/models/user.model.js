@@ -15,6 +15,9 @@ const userSchema = new Schema(
     avatar: {
       type: String,
     },
+    role: {
+      type: String
+    },
     location: {
       type: String,
       default: '',
