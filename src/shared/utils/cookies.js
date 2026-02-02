@@ -6,3 +6,12 @@ export const setAuthCookie = (res, token, name = "adminToken") => {
     maxAge: 24 * 60 * 60 * 1000, // 1 day
   });
 };
+
+
+export const clearAuthCookie = (res, name = "adminToken") => {
+  res.clearCookie(name, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+};

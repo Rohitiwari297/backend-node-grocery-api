@@ -4,7 +4,7 @@ import { adminRole } from "../../shared/constants.js";
 
 const adminSchema = new mongoose.Schema(
     {
-        userId: {
+        username: {
             type: String,
             required: true,
             unique: true
@@ -25,7 +25,7 @@ const adminSchema = new mongoose.Schema(
 
 adminSchema.methods.generateAdminToken = function () {
     return jwt.sign(
-        { _id: this._id, role: this.role },
+        { _id: this._id, username: this.username, role: this.role },
         process.env.JWT_ADMIN_SECRET,
         { expiresIn: process.env.JWT_ADMIN_EXPIRES || "1d" }
     );
