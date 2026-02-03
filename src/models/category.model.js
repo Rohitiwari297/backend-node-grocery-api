@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Schema } from 'mongoose';
+import { typeConstants } from '../shared/constants.js';
 
 const categorySchema = new Schema(
   {
@@ -10,6 +11,11 @@ const categorySchema = new Schema(
     },
     image: {
       type: String,
+    },
+    type: {
+      type: String,
+      enum: [typeConstants.food, typeConstants.other],
+      default: typeConstants.other 
     },
     position: {
       type: Number,
