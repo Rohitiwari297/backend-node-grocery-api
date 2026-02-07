@@ -4,7 +4,7 @@
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "test": "set NODE_OPTIONS=--experimental-vm-modules && jest",
+    "test": "jest",
     "test:watch": "set NODE_OPTIONS=--experimental-vm-modules && jest --watch",
     "test:coverage": "set NODE_OPTIONS=--experimental-vm-modules && jest --coverage",
     "format": "prettier --write .",
