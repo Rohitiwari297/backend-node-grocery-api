@@ -4,6 +4,7 @@ import { ApiResponse } from '../../shared/utils/ApiResponse.js';
 import { Cart } from '../../models/cart.model.js';
 import { Product } from '../../models/product.model.js';
 import { logger } from '../../core/logger/index.js';
+import Shipping from '../../models/shipping.model.js';
 
 // Get user's cart
 export const getCart = asyncHandler(async (req, res) => {
@@ -14,9 +15,24 @@ export const getCart = asyncHandler(async (req, res) => {
     await cart.save();
   }
 
+  // Subtotal calculate
+  const subTotal = cart.items.reduce((sum, item) => {
+    const price = item.productId?.currentPrice ?? item.price ?? 0;
+    return sum + price * item.quantity;
+  }, 0)
+
+  const shippingConfig = await Shipping.findOne();
+
+  let shippingCharges = 0;
+  if (shippingConfig && subTotal < shippingConfig.freeShippingAbove) {
+    shippingCharges = shippingConfig.shippingCharge;
+  }
+
+  const totalAmount = subTotal + shippingCharges;
+
   logger.info(`Cart fetched for user ${req.user._id}`);
 
-  return res.json(new ApiResponse(200, cart, 'Cart fetched successfully'));
+  return res.json(new ApiResponse(200, { cart, priceSummary: { subTotal, shippingCharges, totalAmount, freeShippingAbove: shippingConfig?.freeShippingAbove || 0 } }, 'Cart fetched successfully'));
 });
 
 // Add item to cart

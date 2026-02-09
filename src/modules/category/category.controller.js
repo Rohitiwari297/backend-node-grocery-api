@@ -36,12 +36,12 @@ export const updateCategory = asyncHandler(async (req, res) => {
 
   const category = await Category.findById(id);
 
-  if(thumbnail && category.image){
+  if (thumbnail && category.image) {
     try {
       const fs = await import('fs/promises');
-      await fs.unlink(category.image)     
+      await fs.unlink(category.image).catch(() => { })
     } catch (err) {
-       console.error('Failed to update old category image:', err);
+      console.error('Failed to update old category image:', err);
     }
   }
   const catType = type.toUpperCase();
@@ -67,10 +67,10 @@ export const deleteCategory = asyncHandler(async (req, res) => {
   const delCat = await Category.findByIdAndDelete(id)
   if (!delCat) throw new ApiError(500, 'Invalid category id!');
 
-  if(delCat){
+  if (delCat) {
     try {
       const fs = await import('fs/promises');
-      await fs.unlink(delCat.image)
+      await fs.unlink(delCat.image).catch(() => { });
     } catch (err) {
       console.log('Failed to delete old category image:', err)
     }
@@ -168,7 +168,7 @@ export const updateSubCategory = asyncHandler(async (req, res) => {
   if (image && subCategory.image) {
     try {
       const fs = await import('fs/promises');
-      await fs.unlink(subCategory.image);
+      await fs.unlink(subCategory.image).catch(() => { });
     } catch (err) {
       console.log('Failed to delete old sub-category image:', err);
     }
@@ -189,10 +189,10 @@ export const deleteSubCategory = asyncHandler(async (req, res, next) => {
   const subCategory = await SubCategory.findByIdAndDelete(id);
   if (!subCategory) throw new ApiError(400, 'Invalid sub-category id!');
 
-  if(subCategory){
+  if (subCategory) {
     try {
       const fs = await import('fs/promises');
-      await fs.unlink(subCategory.image)
+      await fs.unlink(subCategory.image).catch(() => { })
     } catch (err) {
       console.log('Failed to delete sub-category image:', err);
     }

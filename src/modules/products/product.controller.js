@@ -283,4 +283,18 @@ export const updateProduct = asyncHandler(async (req, res) => {
   return res.send(new ApiResponse(200, product, 'Product updated successfully.'));
 });
 
+// Delete Product 
+export const deleteProduct = asyncHandler (async (req, res) => {
+  const {id} = req.params;
+  if(!id)throw new ApiError(404, 'Id is missing in params!');
 
+  const product = await Product.findById(id);
+  if(product){
+    try {
+      const fs = import('fs/promises');
+      await Promise.all(product.images.map((img)=> fs.unlink(img).catch()))
+    } catch (err) {
+      console.log('Failed to delete product old images:', err)
+    }
+  }
+})

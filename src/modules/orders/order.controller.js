@@ -7,6 +7,7 @@ import { Product } from '../../models/product.model.js';
 import { Notification } from '../../models/notification.model.js';
 import { logger } from '../../core/logger/index.js';
 import mongoose from 'mongoose';
+import Shipping from '../../models/shipping.model.js';
 
 // Place order using user's cart
 export const placeOrder = asyncHandler(async (req, res) => {
@@ -29,6 +30,21 @@ export const placeOrder = asyncHandler(async (req, res) => {
     };
   });
 
+  // Calculate subTotal
+  const subTotal = orderItems.reduce(
+    (sum, it) => sum + it.price * it.quantity,
+    0
+  );
+
+  const shippingConfig = await Shipping.findOne();
+
+  let shippingCharge = 0;
+  if (shippingConfig && subTotal < shippingConfig.freeShippingAbove) {
+    shippingCharge = shippingConfig.shippingCharge;
+  }
+
+  const totalAmount = subTotal + shippingCharge;
+
   // Generate simple orderId
   const orderId = `ORD${Date.now()}`;
 
@@ -36,6 +52,9 @@ export const placeOrder = asyncHandler(async (req, res) => {
     orderId,
     userId,
     items: orderItems,
+    subTotal,
+    shippingCharge,
+    totalPrice: totalAmount,
     paymentMethod: req.body.paymentMethod || 'cash',
     shippingAddress: req.body.shippingAddress || req.user.location || '',
   });
@@ -192,3 +211,16 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
 
   return res.json(new ApiResponse(200, order, 'Order status updated'));
 });
+
+// GET ALL ORDER
+export const getAllOrder = asyncHandler(async (req, res) => {
+  const orders = await Order.find();
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      orders,
+      orders.length > 0 ? 'Orders fetched successfully!' : 'No orders found',
+      true
+    )
+  );
+}) 

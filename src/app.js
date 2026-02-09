@@ -13,6 +13,7 @@ import couponRoutes from './modules/coupons/coupon.routes.js';
 import cartRoutes from './modules/cart/cart.routes.js';
 import orderRoutes from './modules/orders/order.routes.js';
 import adminRouter from './modules/admin/admin.routes.js'
+import shippingRouter from './modules/shipping/shipping.routes.js';
 import cookieParser from 'cookie-parser';
 
 const app = express();
@@ -46,9 +47,11 @@ app.use('/api/coupons', couponRoutes);
 // app.use('/api/notifications', notificationRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/shipping', shippingRouter);
 
 // Defining the Admin route
 app.use('/api/admin', adminRouter)
+
 
 app.use(requestLogger);
 app.use(errorHandler);

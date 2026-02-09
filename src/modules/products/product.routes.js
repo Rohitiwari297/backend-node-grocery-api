@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { upload } from '../../shared/middlewares/multer.middlewares.js';
-import { addProduct, getProducts, getProductById, getRelatedProducts, updateProduct } from './product.controller.js';
-import {isAdminLoggedIn, isSuperAdmin} from '../../shared/middlewares/admin/auth.middleware.js'
+import { addProduct, getProducts, getProductById, getRelatedProducts, updateProduct, deleteProduct } from './product.controller.js';
+import { isAdminLoggedIn, isSuperAdmin } from '../../shared/middlewares/admin/auth.middleware.js'
 
 const router = Router();
 
@@ -14,6 +14,7 @@ router.route('/related/:productid')
 
 router.route('/:productId')
     .get(getProductById)
-    .patch(isAdminLoggedIn, isSuperAdmin, upload.array('images', 5), updateProduct);
+    .patch(isAdminLoggedIn, isSuperAdmin, upload.array('images', 5), updateProduct)
+    .delete(isAdminLoggedIn, isSuperAdmin, deleteProduct);
 
 export default router;

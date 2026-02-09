@@ -20,13 +20,23 @@ const orderSchema = new mongoose.Schema(
     },
     paymentMethod: { type: String, default: 'cash' },
     shippingAddress: { type: String, default: '' },
+
+    subTotal: {
+      type: Number,
+      required: true
+    },
+
+    shippingCharge: {
+      type: Number,
+      required: true
+    },
   },
   { timestamps: true },
 );
 
 orderSchema.pre('save', function (next) {
   this.totalItems = this.items.reduce((s, it) => s + it.quantity, 0);
-  this.totalPrice = this.items.reduce((s, it) => s + it.price * it.quantity, 0);
+  // this.totalPrice = this.items.reduce((s, it) => s + it.price * it.quantity, 0);
   next();
 });
 
