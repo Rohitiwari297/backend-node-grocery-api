@@ -4,6 +4,49 @@ import { asyncHandler } from '../../shared/utils/asyncHandler.js';
 import { Product } from '../../models/product.model.js';
 import mongoose from 'mongoose';
 
+
+// Add Product
+export const addProduct = asyncHandler(async (req, res) => {
+  const { name, category, subCategory, description, currentPrice, originalPrice, unit, tags } = req.body;
+  if (!name || !category || !subCategory || !description || !currentPrice || !originalPrice || !unit)
+    throw new ApiError(400, 'All files are required!');
+
+  // Extract image paths from multer
+  const images = req.files ? req.files.map((file) => file.path) : [];
+  if (!images || images.length === 0) throw new ApiError(400, 'Failed! At least one image is required');
+
+  console.log(req.body);
+
+  console.log("images length:", !images.length);
+
+  if (!images.length) {
+    // If validation fails, remove any uploaded files to avoid orphaned files
+    if (req.files && req.files.length) {
+      try {
+        const fs = await import('fs/promises');
+        await Promise.all(req.files.map((file) => fs.unlink(file.path).catch(() => { })));
+      } catch (err) {
+        console.error('Failed to remove uploaded files:', err);
+      }
+    }
+    throw new ApiError(400, 'At least one image is required');
+  }
+
+  const product = await Product.create({
+    name,
+    category,
+    subCategory,
+    description,
+    currentPrice,
+    originalPrice,
+    unit,   //1KG 
+    images,
+    tags
+  });
+
+  return res.send(new ApiResponse(201, product, 'Product added successfully.'));
+});
+
 // Get Products
 export const getProducts = asyncHandler(async (req, res) => {
   const { category, subCategory, page = 1, limit = 10, search, sort = 'newest', tags } = req.query;
@@ -113,6 +156,7 @@ export const getProducts = asyncHandler(async (req, res) => {
     ),
   );
 });
+
 // GET Related Products
 export const getRelatedProducts = asyncHandler(async (req, res) => {
   const { productId } = req.params;
@@ -194,42 +238,6 @@ export const getProductById = asyncHandler(async (req, res) => {
   return res.send(new ApiResponse(200, product[0], 'Product fetched successfully.'));
 });
 
-// Add Product
-export const addProduct = asyncHandler(async (req, res) => {
-  const { name, category, subCategory, description, currentPrice, originalPrice, unit } = req.body;
-
-  // Extract image paths from multer
-  const images = req.files ? req.files.map((file) => file.path) : [];
-
-  console.log(req.body);
-
-  if (!images.length) {
-    // If validation fails, remove any uploaded files to avoid orphaned files
-    if (req.files && req.files.length) {
-      try {
-        const fs = await import('fs/promises');
-        await Promise.all(req.files.map((file) => fs.unlink(file.path).catch(() => { })));
-      } catch (err) {
-        console.error('Failed to remove uploaded files:', err);
-      }
-    }
-    throw new ApiError(400, 'At least one image is required');
-  }
-
-  const product = await Product.create({
-    name,
-    category,
-    subCategory,
-    description,
-    currentPrice,
-    originalPrice,
-    unit,
-    images,
-  });
-
-  return res.send(new ApiResponse(201, product, 'Product added successfully.'));
-});
-
 // Update Product
 export const updateProduct = asyncHandler(async (req, res) => {
   const { productId } = req.params; // Product ID from URL
@@ -274,3 +282,5 @@ export const updateProduct = asyncHandler(async (req, res) => {
 
   return res.send(new ApiResponse(200, product, 'Product updated successfully.'));
 });
+
+

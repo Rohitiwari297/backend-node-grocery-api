@@ -35,6 +35,15 @@ export const updateCategory = asyncHandler(async (req, res) => {
   const thumbnail = req.file?.path;
 
   const category = await Category.findById(id);
+
+  if(thumbnail && category.image){
+    try {
+      const fs = await import('fs/promises');
+      await fs.unlink(category.image)     
+    } catch (err) {
+       console.error('Failed to update old category image:', err);
+    }
+  }
   const catType = type.toUpperCase();
   if (category) {
     category.name = name !== undefined ? name : category.name;
@@ -57,6 +66,15 @@ export const deleteCategory = asyncHandler(async (req, res) => {
 
   const delCat = await Category.findByIdAndDelete(id)
   if (!delCat) throw new ApiError(500, 'Invalid category id!');
+
+  if(delCat){
+    try {
+      const fs = await import('fs/promises');
+      await fs.unlink(delCat.image)
+    } catch (err) {
+      console.log('Failed to delete old category image:', err)
+    }
+  }
 
   return res.status(200).json(new ApiResponse(200, delCat, 'Category deleted successfully'));
 
@@ -128,24 +146,40 @@ export const updateSubCategory = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const image = req.file?.path;
 
-  if (!id) throw new ApiError(404, 'Sub-category id is missing!')
+  if (!id) throw new ApiError(404, 'Sub-category id is missing!');
 
-  const updatedDataObj = {};
-  if (categoryId !== undefined) updatedDataObj.category = categoryId;
-  if (name !== undefined) updatedDataObj.name = name;
-  if (image !== undefined) updatedDataObj.image = image;
+  const subCategory = await SubCategory.findById(id);
+  if (!subCategory) throw new ApiError(404, 'Invalid Sub-category id!');
 
-  if (Object.keys(updatedDataObj).length === 0) throw new ApiError(400, 'No fields provided for update');
+  if (categoryId !== undefined) subCategory.category = categoryId;
+  if (name !== undefined) subCategory.name = name;
+  if (image !== undefined) subCategory.image = image;
 
-  const updatedSubCategory = await SubCategory.findByIdAndUpdate(
-    id,
-    updatedDataObj,
-    { new: true }
-  )
-  if (!updatedSubCategory) throw new ApiError(500, 'Invalid Sub-category id!');
+  if (
+    categoryId === undefined &&
+    name === undefined &&
+    image === undefined
+  ) {
+    throw new ApiError(400, 'No fields provided for update');
+  }
 
-  return res.status(200).json(new ApiResponse(200, updatedSubCategory, 'Sub-category updated successfully!', true))
-})
+  await subCategory.save();
+
+  if (image && subCategory.image) {
+    try {
+      const fs = await import('fs/promises');
+      await fs.unlink(subCategory.image);
+    } catch (err) {
+      console.log('Failed to delete old sub-category image:', err);
+    }
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, subCategory, 'Sub-category updated successfully!', true)
+    );
+});
 
 // DELETE SUB CATEGORY
 export const deleteSubCategory = asyncHandler(async (req, res, next) => {
@@ -154,6 +188,15 @@ export const deleteSubCategory = asyncHandler(async (req, res, next) => {
 
   const subCategory = await SubCategory.findByIdAndDelete(id);
   if (!subCategory) throw new ApiError(400, 'Invalid sub-category id!');
+
+  if(subCategory){
+    try {
+      const fs = await import('fs/promises');
+      await fs.unlink(subCategory.image)
+    } catch (err) {
+      console.log('Failed to delete sub-category image:', err);
+    }
+  }
 
   next(res.status(200).json(new ApiResponse(200, subCategory, 'Sub-category deleted successfully', true)))
 
