@@ -9,7 +9,8 @@
     "test:coverage": "set NODE_OPTIONS=--experimental-vm-modules && jest --coverage",
     "format": "prettier --write .",
     "check-format": "prettier --check .",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "start":"nodemon src/index.js"
   },
   "keywords": [],
   "author": "",
