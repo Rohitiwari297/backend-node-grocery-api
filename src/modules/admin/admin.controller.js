@@ -5,6 +5,7 @@ import { ApiError } from "../../shared/utils/ApiError.js";
 import { ApiResponse } from "../../shared/utils/ApiResponse.js";
 import { clearAuthCookie, setAuthCookie } from '../../shared/utils/cookies.js'
 import Delivery from "../../models/delievery.model.js";
+import { Order } from '../../models/order.model.js';
 
 
 // CREATE ADMIN
@@ -125,7 +126,46 @@ export const fetchedDriversList = asyncHandler(async (req, res) => {
 
 })
 
+// ASSIGN ORDER TO THE DRIVER
+export const assignOrder = asyncHandler(async (req, res) => {
+    const { assignedDriverId, orderId } = req.body;
+    if (!assignedDriverId || !orderId) throw new ApiError(400, 'All fields are required!');
 
+    /**
+     * CHECK DRIVER AND ORDER ID IS VALID OR NOT
+     */
+    const order = await Order.findOne({orderId: orderId});
+    if (!order) throw new ApiError(404, 'Order not found!');
+
+    /**
+    * CHECK ORDER ALREADY ASSIGNED 
+    */
+    if (order.status !== "pending") {
+        throw new ApiError(400, 'Order already assigned!');
+    }
+
+    /**
+     * Agar 2 admins ek hi time pe same driver assign karne ki try karein:
+        Flow hoga:
+            Admin 1 → driver available true
+            Admin 2 → driver available true
+            Dono assign kar denge 
+     */
+    const driver = await Delivery.findOneAndUpdate(
+        { _id: assignedDriverId, isAvailable: true, isVerified: true }, //finding criteria
+        { isAvailable: false }, // update instanly -> // DRIVER IS NOT AWAILABLE UNTIL THE DELIVERED THE ASSIGNED ORDER
+        { new: true }
+    );
+    if (!driver) throw new ApiError(400, 'Driver not available or not verified!');
+
+    order.assignedDriverId = driver._id
+    order.status = "assigned";
+    order.assignedAt = new Date();
+    await order.save();
+
+    return res.status(200).json(new ApiResponse(200, { OrderDetails: order, DriverInformation: driver }, `Order assigned to the ${driver.name}`, true))
+
+})
 
 
 
