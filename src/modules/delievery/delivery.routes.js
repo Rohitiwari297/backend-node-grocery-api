@@ -32,4 +32,4 @@ delivery.route('/')
         { name: "licenseImage", maxCount: 1 }
     ]), updateProfile)
 
-export default delivery
+export default delivery;

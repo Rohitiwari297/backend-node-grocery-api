@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt'
 import { ApiError } from "../../shared/utils/ApiError.js";
 import { ApiResponse } from "../../shared/utils/ApiResponse.js";
 import { clearAuthCookie, setAuthCookie } from '../../shared/utils/cookies.js'
+import Delivery from "../../models/delievery.model.js";
 
 
 // CREATE ADMIN
@@ -78,6 +79,53 @@ export const logOutAdmin = asyncHandler(async (req, res) => {
         new ApiResponse(200, {}, "Admin log out successfully", true)
     )
 })
+
+//GET PROFILE DETAILS (FOR ADMIN AND SUPER ADMIN)
+export const getProfile = asyncHandler(async (req, res) => {
+
+    const profile = await Admin.findById(req.user._id);
+
+    if (!profile) throw new ApiError(404, 'Admin not found!');
+
+    return res.status(200).json(
+        new ApiResponse(200, profile, 'Details fetched successfully!', true)
+    );
+});
+
+
+//GET ADMINS DETAILS (ONLY FOR THE SUPER ADMIN)
+export const fetchedAdminsList = asyncHandler(async (req, res) => {
+    const { id } = req.query;
+    const queryObj = {}
+
+    if (id) { queryObj._id = id; }
+
+    // console.log('queryObj:', queryObj)
+
+    //EXCLUDE SUPER ADMIN IF QUERY OBJ === EMPTY
+    queryObj.role = { $ne: 'SUPER_ADMIN' }
+
+    const data = await Admin.find(queryObj)
+    if (data.length === 0) throw new ApiError(404, 'Data Not found!');
+
+    return res.status(200).json(new ApiResponse(200, data, 'Details fetched successfully!', true))
+
+})
+
+//FETCHED ALL DRIVERS LIST
+export const fetchedDriversList = asyncHandler(async (req, res) => {
+    const { id } = req.query;
+    const queryObj = {}
+    if (id) { queryObj._id = id; }
+    console.log('queryObj:', queryObj)
+    const drivers = await Delivery.find(queryObj);
+    if (drivers.length === 0) throw new ApiError(404, 'No Admin found!');
+
+    return res.status(200).json(new ApiResponse(200, drivers, 'Details fetched successfully!', true))
+
+})
+
+
 
 
 

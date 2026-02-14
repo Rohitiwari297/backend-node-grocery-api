@@ -30,13 +30,19 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       required: true
     },
-    driverId: {
+    assignedDriverId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Driver',
+      ref: "Driver",
+      default: null
     },
-    orderStatus:{},
-    assignedAt:{},
-    deliveredAt:{},
+
+    assignedAt: {
+      type: Date,
+    },
+
+    deliveredAt: {
+      type: Date,
+    }
   },
   { timestamps: true },
 );
