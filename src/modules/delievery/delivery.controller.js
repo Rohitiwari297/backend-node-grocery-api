@@ -5,6 +5,8 @@ import { asyncHandler } from '../../shared/utils/asyncHandler.js'
 import bcrypt from 'bcrypt'
 import { Otp } from '../../models/auth.model.js';
 import fs from 'fs/promises'
+import { Order } from '../../models/order.model.js';
+import { access } from 'fs';
 
 /**
  *  WE USED HERE NAMING CONVENTION DELIVERY FOR DELIVERY BOY
@@ -281,5 +283,198 @@ export const updateProfile = asyncHandler(async (req, res) => {
 
     res.status(200).json(
         new ApiResponse(200, driver, "Profile updated successfully", true)
+    );
+})
+
+/**
+ * API FOR PROCESS OF THE GETTING ASSIGNED ORDER TO COMPLETION OF THE DELIVERY
+ * @getOrders
+ * @acceptOrder
+ * @markAsPickedUpOrder
+ * @outOfDelivery
+ * @markAsDelivered
+ * @getDeliveryHistory
+ */
+
+// GET ASSINGED ORDER
+export const getAssignedOrder = asyncHandler(async (req, res) => {
+    const userId = req.user?.id;
+    const orders = await Order.find({
+        assignedDriverId: userId,
+        status: { $in: ["assigned", "picked", "out_for_delivery"] }
+    });
+
+    return res.status(200).json(new ApiResponse(200,
+        {
+            assignedOrders: orders,
+            totalAssignedOrders: orders.length
+        },
+        orders.length > 0
+            ? 'Assigned orders fetched successfully!'
+            : 'No active orders found.',
+        true
+    ))
+})
+
+//ACCEPT AND DEJECT ORDER BY THE DRIVER
+export const respondToOrder = asyncHandler(async (req, res) => {
+    const driverId = req.user?.id;
+    const { orderId } = req.params;
+    const { action } = req.body;
+
+    //VALIDATE THE RECEIVED ACTION
+    if (!['accept', 'reject'].includes(action)) {
+        throw new ApiError(400, 'Invalid action!')
+    };
+
+    const assignedOrder = await Order.findOne({
+        _id: orderId,
+        assignedDriverId: driverId,
+        status: 'assigned'
+    })
+
+    if (!assignedOrder) {
+        throw new ApiError(404, "Order not found or already processed!");
+    }
+
+    if (action === 'accept') {
+        assignedOrder.status = 'accepted'
+        assignedOrder.acceptedAt = Date.now();
+    } else {
+        assignedOrder.status = 'pending'
+        assignedOrder.rejectedAt = Data.now();
+        assignedOrder.assignedDriverId = null
+    }
+
+    assignedOrder.save();
+
+    return res.status(200).json(new ApiResponse(200, assignedOrder, `Order ${action}ed successfully`, true))
+
+
+})
+
+// MARK AS PICKED_UP ORDER
+export const markAsPickedUpOrder = asyncHandler(async (req, res) => {
+    const { orderId } = req.params;
+    const userId = req.user.id;
+
+    const order = await Order.findOne({
+        _id: orderId,
+        assignedDriverId: userId,
+        status: 'accepted'
+    })
+    if (!order) {
+        throw new ApiError(404, "Order not found or already processed!");
+    }
+
+    order.status = 'picked_up';
+    order.pickedUpAt = Date.now();
+    await order.save();
+
+    return res.status(200).json(new ApiResponse(200, order, `Order marked as picked up successfully!`, true))
+})
+
+// MARK AS DELIVERED
+export const markAsDelivered = asyncHandler(async (req, res) => {
+    const { orderId } = req.params;
+    const userId = req.user.id;
+
+    const order = await Order.findOne({
+        _id: orderId,
+        assignedDriverId: userId,
+        status: 'picked_up'
+    })
+    if (!order) {
+        throw new ApiError(404, "Order not found or already processed!");
+    }
+
+    // PROTECT OTP
+    const hashedOTP = crypto
+        .createHash("sha256")
+        .update(genOtp())
+        .digest("hex");
+
+    //SEND THE OTP TO THE USER FOR THE VERIFICATION
+    order.status = "out_for_delivery";
+    order.outForDeliveryAt = new Date();
+    order.deliveryOTP = hashedOTP;
+    order.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+    order.otpAttempts = 0;
+
+    await order.save();
+
+    // TODO: Send OTP to customer via SMS
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {},
+            "Order marked as out for delivery. OTP sent to customer.",
+            true
+        )
+    );
+
+
+
+})
+
+// VERIFY OTP FOR CONFIRMED DELIVERY
+export const verifyDeliveryOTP = asyncHandler(async (req, res) => {
+    const { orderId } = req.params;
+    const { otp } = req.body;
+    const driverId = req.user._id;
+
+    if (!otp) {
+        throw new ApiError(400, "OTP is required!");
+    }
+
+    const order = await Order.findOne({
+        _id: orderId,
+        assignedDriverId: driverId,
+        status: "out_for_delivery"
+    });
+
+    if (!order) {
+        throw new ApiError(404, "Order not found or invalid state!");
+    }
+
+    // Expiry check
+    if (order.otpExpiresAt < new Date()) {
+        throw new ApiError(400, "OTP expired!");
+    }
+
+    // Attempt limit
+    if (order.otpAttempts >= 3) {
+        throw new ApiError(400, "Maximum OTP attempts exceeded!");
+    }
+
+    // Hash input OTP
+    const hashedInputOTP = crypto
+        .createHash("sha256")
+        .update(otp)
+        .digest("hex");
+
+    if (order.deliveryOTP !== hashedInputOTP) {
+        order.otpAttempts += 1;
+        await order.save();
+        throw new ApiError(400, "Invalid OTP!");
+    }
+
+    // SUCCESS
+    order.status = "delivered";
+    order.deliveredAt = new Date();
+    order.deliveryOTP = undefined;
+    order.otpExpiresAt = undefined;
+    order.otpAttempts = 0;
+
+    await order.save();
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            order,
+            "Order delivered successfully!",
+            true
+        )
     );
 })

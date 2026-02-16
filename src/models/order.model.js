@@ -15,9 +15,10 @@ const orderSchema = new mongoose.Schema(
     totalPrice: { type: Number, default: 0 },
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'assigned', 'shipped', 'delivered', 'cancelled'],
+      enum: ['pending', 'assigned', 'accepted', 'picked_up', 'out_for_delivery', 'delivered', 'cancelled'],
       default: 'pending',
     },
+
     paymentMethod: { type: String, default: 'cash' },
     shippingAddress: { type: String, default: '' },
 
@@ -40,9 +41,38 @@ const orderSchema = new mongoose.Schema(
       type: Date,
     },
 
+    acceptedAt: {
+      type: Date
+    },
+
+    rejectedAt: {
+      type: Date
+    },
+
+    pickedUpAt: {
+      type: Date
+    },
+
+    outForDeliveryAt: {
+      type: Date
+    },
+
     deliveredAt: {
       type: Date,
-    }
+    },
+
+    deliveryOTP: {
+      type: String
+    },
+
+    otpExpiresAt: {
+      type: Date
+    },
+
+    otpAttempts: {
+      type: Number,
+      default: 0
+    },
   },
   { timestamps: true },
 );

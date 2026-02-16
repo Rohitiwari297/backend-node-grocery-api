@@ -110,6 +110,9 @@ const deliverySchema = new mongoose.Schema(
       type: Boolean,
       default: false, // admin can be verify
     },
+    verifiedAt:{
+      type: Date
+    },
 
     isActive: {
       type: Boolean,

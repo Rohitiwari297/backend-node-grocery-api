@@ -126,6 +126,24 @@ export const fetchedDriversList = asyncHandler(async (req, res) => {
 
 })
 
+//VERIFY ADMIN TO THE DRIVER 
+export const verifyDriver = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    if (!id) throw new ApiError(404, 'Driver id missing!');
+
+    const driver = await Delivery.findById(id)
+    if (!driver) throw new ApiError(400, 'Invalid driver id or driver not present!');
+
+    if (driver.isVerified) throw new ApiError(400, 'Driver is already verified!');
+
+    driver.isVerified = true;
+    driver.verifiedAt = new Date();
+    await driver.save();
+
+    return res.status(200).json(new ApiResponse(200, driver, 'Driver verified successfully!', true))
+
+})
+
 // ASSIGN ORDER TO THE DRIVER
 export const assignOrder = asyncHandler(async (req, res) => {
     const { assignedDriverId, orderId } = req.body;
@@ -134,7 +152,7 @@ export const assignOrder = asyncHandler(async (req, res) => {
     /**
      * CHECK DRIVER AND ORDER ID IS VALID OR NOT
      */
-    const order = await Order.findOne({orderId: orderId});
+    const order = await Order.findOne({ orderId: orderId });
     if (!order) throw new ApiError(404, 'Order not found!');
 
     /**
