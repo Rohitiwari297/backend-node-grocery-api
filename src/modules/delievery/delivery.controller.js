@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt'
 import { Otp } from '../../models/auth.model.js';
 import fs from 'fs/promises'
 import { Order } from '../../models/order.model.js';
-import { access } from 'fs';
+import crypto from 'crypto'
 
 /**
  *  WE USED HERE NAMING CONVENTION DELIVERY FOR DELIVERY BOY
@@ -299,22 +299,40 @@ export const updateProfile = asyncHandler(async (req, res) => {
 // GET ASSINGED ORDER
 export const getAssignedOrder = asyncHandler(async (req, res) => {
     const userId = req.user?.id;
-    const orders = await Order.find({
-        assignedDriverId: userId,
-        status: { $in: ["assigned", "picked", "out_for_delivery"] }
-    });
+    const { status } = req.query;
 
-    return res.status(200).json(new ApiResponse(200,
-        {
-            assignedOrders: orders,
-            totalAssignedOrders: orders.length
-        },
-        orders.length > 0
-            ? 'Assigned orders fetched successfully!'
-            : 'No active orders found.',
-        true
-    ))
-})
+    const queryObj = {
+        assignedDriverId: userId
+    };
+
+    if (status === 'newOrder') {
+        queryObj.status = 'assigned';
+    }
+
+    if (status === 'ongoing') {
+        queryObj.status = { $in: ['accepted', 'picked_up', 'out_for_delivery'] };
+    }
+
+    if (status === 'delivered') {
+        queryObj.status = 'delivered';
+    }
+
+    const orders = await Order.find(queryObj).sort({ createdAt: -1 });
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                assignedOrders: orders,
+                totalAssignedOrders: orders.length
+            },
+            orders.length > 0
+                ? 'Orders fetched successfully!'
+                : 'No orders found.',
+            true
+        )
+    );
+});
 
 //ACCEPT AND DEJECT ORDER BY THE DRIVER
 export const respondToOrder = asyncHandler(async (req, res) => {
@@ -328,7 +346,7 @@ export const respondToOrder = asyncHandler(async (req, res) => {
     };
 
     const assignedOrder = await Order.findOne({
-        _id: orderId,
+        orderId: orderId,
         assignedDriverId: driverId,
         status: 'assigned'
     })
@@ -359,7 +377,7 @@ export const markAsPickedUpOrder = asyncHandler(async (req, res) => {
     const userId = req.user.id;
 
     const order = await Order.findOne({
-        _id: orderId,
+        orderId: orderId,
         assignedDriverId: userId,
         status: 'accepted'
     })
@@ -380,7 +398,7 @@ export const markAsDelivered = asyncHandler(async (req, res) => {
     const userId = req.user.id;
 
     const order = await Order.findOne({
-        _id: orderId,
+        orderId: orderId,
         assignedDriverId: userId,
         status: 'picked_up'
     })
@@ -389,9 +407,11 @@ export const markAsDelivered = asyncHandler(async (req, res) => {
     }
 
     // PROTECT OTP
+    const otp = genOtp()
+    console.log('Order OTP:', otp)
     const hashedOTP = crypto
         .createHash("sha256")
-        .update(genOtp())
+        .update(otp)
         .digest("hex");
 
     //SEND THE OTP TO THE USER FOR THE VERIFICATION
@@ -422,14 +442,17 @@ export const markAsDelivered = asyncHandler(async (req, res) => {
 export const verifyDeliveryOTP = asyncHandler(async (req, res) => {
     const { orderId } = req.params;
     const { otp } = req.body;
-    const driverId = req.user._id;
+    const driverId = req.user.id;
+
+    console.log(orderId)
 
     if (!otp) {
         throw new ApiError(400, "OTP is required!");
     }
 
     const order = await Order.findOne({
-        _id: orderId,
+
+        orderId: orderId,
         assignedDriverId: driverId,
         status: "out_for_delivery"
     });
@@ -469,11 +492,39 @@ export const verifyDeliveryOTP = asyncHandler(async (req, res) => {
 
     await order.save();
 
+    // UPDATE THE DRIVER ISAVAILABLE STATUS
+    const driver = await Delivery.findByIdAndUpdate(
+        userId,
+        { $set: { isAvailable: true } },
+        { new: true }
+    )
+
     return res.status(200).json(
         new ApiResponse(
             200,
             order,
             "Order delivered successfully!",
+            true
+        )
+    );
+})
+
+// GET DELIVERED HISTORY
+export const getDeliveryHistory = asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+
+    const orders = await Order.find({
+        assignedDriverId: userId,
+        status: 'delivered',
+    }).sort({ deliveredAt: -1 })
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            orders,
+            orders.length > 0
+                ? "Delivered history fetched successfully!"
+                : "No delivered orders found!",
             true
         )
     );

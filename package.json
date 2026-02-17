@@ -10,7 +10,7 @@
     "format": "prettier --write .",
     "check-format": "prettier --check .",
     "dev": "nodemon src/index.js",
-    "start":"nodemon src/index.js"
+    "start": "nodemon src/index.js"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +20,7 @@
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "firebase-admin": "^12.7.0",

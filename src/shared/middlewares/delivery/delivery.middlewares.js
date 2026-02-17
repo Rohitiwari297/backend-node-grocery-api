@@ -25,6 +25,7 @@ export const isLoggedIn = asyncHandler(async (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_DELIVERY_SECRET);
         req.user = decoded;
+        console.log('Driver:', decoded)
         next();
     } catch (error) {
         throw new ApiError(401, `Un-authorized! Invalid token, Error: ${error}`)
