@@ -7,6 +7,7 @@ import { Otp } from '../../models/auth.model.js';
 import fs from 'fs/promises'
 import { Order } from '../../models/order.model.js';
 import crypto from 'crypto'
+import Convenience from '../../models/deliveryConvenience.model.js';
 
 /**
  *  WE USED HERE NAMING CONVENTION DELIVERY FOR DELIVERY BOY
@@ -490,14 +491,29 @@ export const verifyDeliveryOTP = asyncHandler(async (req, res) => {
     order.otpExpiresAt = undefined;
     order.otpAttempts = 0;
 
+    /**
+     * ADD THE DEFINED CONVENIENCE CHARGE IN DRIVERS WALLET
+     */
+    const convenience = await Convenience.findOneAndUpdate(
+        {},  // empty filter (first document)
+        {},  // no update
+        { new: true, upsert: true } // create if not exists
+    );
+
     await order.save();
 
     // UPDATE THE DRIVER ISAVAILABLE STATUS
     const driver = await Delivery.findByIdAndUpdate(
-        userId,
-        { $set: { isAvailable: true } },
+        driverId,
+        {
+            $set: { isAvailable: true },
+            $inc: { walletBalance: order.driverEarning }
+        },
         { new: true }
     )
+
+    // driver.walletBalance = driver.walletBalance + convenience.baseDriverFare
+    // driver.save();
 
     return res.status(200).json(
         new ApiResponse(

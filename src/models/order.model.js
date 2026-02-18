@@ -73,6 +73,17 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
+
+    driverEarning: {
+      type: Number,
+      default: 0
+    },
+    
+    isDriverPaid: {
+      type: Boolean,
+      default: false
+    }
+
   },
   { timestamps: true },
 );

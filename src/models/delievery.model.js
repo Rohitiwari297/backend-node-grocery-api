@@ -110,7 +110,8 @@ const deliverySchema = new mongoose.Schema(
       type: Boolean,
       default: false, // admin can be verify
     },
-    verifiedAt:{
+    
+    verifiedAt: {
       type: Date
     },
 
@@ -118,6 +119,12 @@ const deliverySchema = new mongoose.Schema(
       type: Boolean,
       default: false, // admin can be change 
     },
+
+    walletBalance: {
+      type: Number,
+      default: 0
+    }
+
   },
   {
     timestamps: true, // ye automatically createdAt & updatedAt add karega

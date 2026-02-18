@@ -5,5 +5,10 @@ export const adminRole = {
 
 export const typeConstants  = {
     food : 'FOOD',
+    fruits: 'FRUITS',
+    vegetables: 'VEGETABLES',
+    bakeyitems: 'BAKEYITEMS',
+    cafe: 'CAFE',
+    groceries: 'GROCERIES',
     other : 'OTHER'
 }

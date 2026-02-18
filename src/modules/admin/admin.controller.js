@@ -6,6 +6,7 @@ import { ApiResponse } from "../../shared/utils/ApiResponse.js";
 import { clearAuthCookie, setAuthCookie } from '../../shared/utils/cookies.js'
 import Delivery from "../../models/delievery.model.js";
 import { Order } from '../../models/order.model.js';
+import Convenience from "../../models/deliveryConvenience.model.js";
 
 
 // CREATE ADMIN
@@ -146,7 +147,7 @@ export const verifyDriver = asyncHandler(async (req, res) => {
 
 // ASSIGN ORDER TO THE DRIVER
 export const assignOrder = asyncHandler(async (req, res) => {
-    const { assignedDriverId, orderId } = req.body;
+    const { assignedDriverId, orderId, baseDriverFare } = req.body;
     if (!assignedDriverId || !orderId) throw new ApiError(400, 'All fields are required!');
 
     /**
@@ -160,6 +161,17 @@ export const assignOrder = asyncHandler(async (req, res) => {
     */
     if (order.status !== "pending") {
         throw new ApiError(400, 'Order already assigned!');
+    }
+
+    /**
+     * UPDATE THE BASE DRIVER FARE IF ADMIN CHANGED 
+     * (THIS IS A TEMPRORY APPROACH HAVE TO USE SESSION TRANSACTION)
+     */
+    const convenience = await Convenience.findOne();
+    if (baseDriverFare !== undefined) {
+        convenience.baseDriverFare = baseDriverFare;
+        convenience.lastUpdatedBy = req.user.id;
+        await convenience.save();
     }
 
     /**

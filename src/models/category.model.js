@@ -14,8 +14,8 @@ const categorySchema = new Schema(
     },
     type: {
       type: String,
-      enum: [typeConstants.food, typeConstants.other],
-      default: typeConstants.other 
+      enum: [typeConstants.food, typeConstants.bakeyitems, typeConstants.cafe, typeConstants.fruits, typeConstants.groceries, typeConstants.vegetables, typeConstants.other],
+      default: typeConstants.other
     },
     position: {
       type: Number,

@@ -44,7 +44,7 @@ export const updateCategory = asyncHandler(async (req, res) => {
       console.error('Failed to update old category image:', err);
     }
   }
-  const catType = type.toUpperCase();
+  const catType = type?.toUpperCase();
   if (category) {
     category.name = name !== undefined ? name : category.name;
     category.position = position !== undefined ? position : category.position;
